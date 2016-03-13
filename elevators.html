@@ -1,0 +1,479 @@
+<html>
+
+<head>
+	<title>Elevator Simulation</title>
+	<script src="http://mbostock.github.com/d3/d3.v2.js"></script>
+	<style>
+
+		.axis {
+			shape-rendering: crispEdges;
+		}
+		.x.axis path {
+			display: none;
+		}
+		.x.axis line,
+		.x.axis path {
+			stroke: #888;
+			stroke-dasharray: 0.0 0.0;
+			stroke-dashoffset: 0.00;
+		}
+		.y.axis line,
+		.y.axis path {
+			fill: none;
+			stroke: #888;
+			stroke-dasharray: 0.0 0.0;
+			stroke-dashoffset: 0.00;
+		}
+
+		.slider,
+		.slidervertical {
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			overflow: visible;
+			z-index: 100;
+		}
+		/* slidershell exists only
+to provide a positioning context for the range input and other elements.*/
+
+		.slidershell {
+			border: 0 none;
+			position: relative;
+			left: 0px;
+			top: 0px;
+			overflow: visible;
+		}
+		/* .slidertrack is the visible track on which the user drags the thumb button. */
+
+		.slidertrack {
+			border: 2px outset #666;
+			border-radius: 4px;
+			position: absolute;
+		}
+		/* .sliderfill adds color (or a gradient as seen here) to the track as the user
+    drags the thumb. */
+
+		.sliderfill {
+			border: 2px solid black;
+			border-radius: 4px;
+			position: absolute;
+			opacity: 0.2;
+			pointer-events: none;
+			background: black;
+		}
+		/* .sliderthumb can be any css you like including an image.
+    The dimensions must match those found in the rule for
+    input[type=range]::-webkit-slider-thumb. */
+
+		.sliderthumb {
+			width: 40px;
+			height: 60px;
+			background-repeat: no-repeat;
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			border: 0 none;
+			padding: 0px;
+			margin: 0px;
+			text-align: center;
+			pointer-events: none;
+		}
+		/* .slidervalue can be styled as you see fit */
+
+		.slidervalue {
+			width: 40px;
+			height: 40px;
+			line-height: 40px;
+			color: #fff;
+			font-family: helvetica, sans-serif;
+			font-size: 18px;
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			border: 0 none;
+			padding: 0px;
+			margin: 0px;
+			text-align: center;
+			pointer-events: none;
+		}
+		/* First we have to make transparent all the default elements of the range input.
+    We use color:transparent to eliminate the default tick marks in IE. */
+
+		input[type=range]::-ms-track {
+			width: 100%;
+			height: 100%;
+			-webkit-appearance: none;
+			margin: 0px;
+			padding: 0px;
+			border: 0 none;
+			background: transparent;
+			color: transparent;
+			overflow: visible;
+		}
+
+		input[type=range]::-moz-range-track {
+			width: 100%;
+			height: 100%;
+			-moz-appearance: none;
+			margin: 0px;
+			padding: 0px;
+			border: 0 none;
+			background: transparent;
+			color: transparent;
+			overflow: visible;
+		}
+
+		input[type=range] {
+			width: 100%;
+			height: 100%;
+			-webkit-appearance: none;
+			margin: 0px;
+			padding: 0px;
+			border: 0 none;
+			background: transparent;
+			color: transparent;
+			overflow: visible;
+		}
+		/* we need a separate rule for when the range input is to be vertical */
+
+		input[type=range].slidervertical {
+			-webkit-appearance: slider-vertical;
+			writing-mode: bt-lr;
+			/* IE */
+			opacity: 0.01;
+			/* needed to hide the default slider-vertical appearance */
+		}
+
+		input[type=range]:focus::-webkit-slider-runnable-track {
+			background: transparent;
+			border: transparent;
+		}
+
+		input[type=range]:focus {
+			outline: none;
+		}
+		/* Make the thumbs the same size as your custom sliderthumb.
+    they will not be visible but they will be draggable.    */
+
+		input[type=range]::-ms-thumb {
+			width: 40px;
+			height: 40px;
+			border-radius: 0px;
+			border: 0 none;
+			background: transparent;
+		}
+
+		input[type=range]::-moz-range-thumb {
+			width: 40px;
+			height: 40px;
+			border-radius: 0px;
+			border: 0 none;
+			background: transparent;
+		}
+
+		input[type=range]::-webkit-slider-thumb {
+			width: 40px;
+			height: 60px;
+			border-radius: 0px;
+			border: 0 none;
+			background: transparent;
+			-webkit-appearance: none;
+		}
+		/* microsoft IE10+ and Edge - eliminates default fills before and after thumb */
+
+		input[type=range]::-ms-fill-lower {
+			background: transparent;
+			border: 0 none;
+		}
+
+		input[type=range]::-ms-fill-upper {
+			background: transparent;
+			border: 0 none;
+		}
+
+		input[type=range]::-ms-tooltip {
+			display: none;
+		}
+		/* other rules you may need for page styling */
+
+		body {
+			font-family: sans-serif;
+		}
+
+		.slider2column,
+		td,
+		tr,
+		th {
+			width: 400px;
+			border: 0 none !important;
+		}
+	</style>
+</head>
+
+<body>
+
+	<form style="margin:0;padding-left:5;padding-top:5px;position:fixed;bottom:0;left:0;z-index:1000000; width:100%;height:25px;background-color:#0b2778;color:white">
+		Create new amount of elevators:
+		<input type="text" name="num"></input>
+		<input type="submit" value="Create" />
+		<br>
+	</form>
+	<button type="button" onclick="go(this.form)">Go</button>
+	<br>
+	<div id="graph" class="aGraph" style="position:absolute;top:50px;left:80px; float:left;"></div>
+
+	<script>
+		var numElevators = window.location.search.split("=")[1] == undefined ? 1 : window.location.search.split("=")[1];
+		/* Code by Steven Estrella. http://www.shearspiremedia.com */
+		/* we need to change slider appearance oninput and onchange */
+		function showValue(val, vertical, elevator) {
+			/* setup variables for the elements of our slider */
+			var thumb = document.getElementById("sliderthumb" + elevator.number);
+			var shell = document.getElementById("slidershell" + elevator.number);
+			var track = document.getElementById("slidertrack" + elevator.number);
+			var fill = document.getElementById("sliderfill" + elevator.number);
+			var rangevalue = document.getElementById("slidervalue" + elevator.number);
+			var slider = document.getElementById("slider" + elevator.number);
+			elevator.start = parseInt(slider.value);
+
+			var pc = (parseInt(val) - slider.min) / (slider.max - slider.min); /* the percentage slider value */
+			var thumbsize = 40; /* must match the thumb size in your css */
+			var bigval = 480; /* widest or tallest value depending on orientation */
+			var smallval = 40; /* narrowest or shortest value depending on orientation */
+			var tracksize = bigval - thumbsize;
+			var fillsize = 16;
+			var filloffset = 10;
+			var bordersize = 2;
+			var loc = vertical ? (1 - pc) * tracksize : pc * tracksize;
+			var degrees = 360 * pc;
+
+			rangevalue.innerHTML = val;
+
+
+			fill.style.opacity = 1.0;
+
+			rangevalue.style.top = (vertical ? loc : 0) + "px";
+			rangevalue.style.left = (vertical ? 0 : loc) + "px";
+			thumb.style.top = (vertical ? loc : 0) + "px";
+			thumb.style.left = (vertical ? 0 : loc) + "px";
+			fill.style.top = (vertical ? loc + (thumbsize / 2) : filloffset + bordersize) + "px";
+			fill.style.left = (vertical ? filloffset + bordersize : 0) + "px";
+			fill.style.width = (vertical ? fillsize : loc + (thumbsize / 2)) + "px";
+			fill.style.height = (vertical ? bigval - filloffset - fillsize - loc : fillsize) + "px";
+			shell.style.height = (vertical ? bigval : smallval) + "px";
+			shell.style.width = (vertical ? smallval : bigval) + "px";
+			track.style.height = (vertical ? bigval - 4 : fillsize) + "px"; /* adjust for border */
+			track.style.width = (vertical ? fillsize : bigval - 4) + "px"; /* adjust for border */
+			track.style.left = (vertical ? filloffset + bordersize : 0) + "px";
+			track.style.top = (vertical ? 0 : filloffset + bordersize) + "px";
+		}
+		/* we often need a function to set the slider values on page load */
+		function setValue(val, vertical, elevator) {
+			document.getElementById("slider" + elevator.number).value = val;
+			showValue(val, vertical, elevator);
+		}
+
+		function elevator(number, id, color) {
+			this.number = number;
+			this.rate = 1;
+			this.start = 0;
+			this.data = [
+				[0, 0]
+			];
+			this.atMax = 9;
+			this.ymax = 0;
+			this.id = id;
+			this.color = color;
+			this.sw = 6;
+			this.time = 3000;
+			this.slopeLength = 0;
+			this.getRate = function() {
+				this.rate = parseInt(document.getElementById("slope" + this.number).value);
+			};
+			this.addToPage = function(left) {
+				document.write('Elevator ' + this.number + ' rate:<input name="slope" id="slope' + this.number + '" type="number"></input><br><p style="position:absolute; top:' + (40 + 20 * numElevators) + ';left:' + (left + 19) + '">' + this.number +
+					'</p><table style=" position:absolute; top:' + (20 + 20 * numElevators) + ';left:' + left + '; margin-top:60px;  float:left;" class="slider2column"><tr><td><div class="slidershell" id="slidershell' + this.number +
+					'"><div class="sliderfill" id="sliderfill' + this.number + '"></div><div class="slidertrack" id="slidertrack' + this.number + '"></div><div class="sliderthumb" id="sliderthumb' + this.number +
+					'"></div><div class="slidervalue" id="slidervalue' + this.number + '">0</div><input class="slidervertical" name="start" id="slider' + this.number + '" type="range" min="-5" max="12" value="0" oninput="showValue(value,true,elevators[' + (this.number -
+						1) + ']);" onchange="showValue(value,true,elevators[' + (this.number - 1) + ']);" orient="vertical" /></div></td></tr></table>');
+				document.querySelector('#sliderthumb' + this.number).style.backgroundColor = this.color;
+			};
+			this.setTimer = function() {
+				var time = 3000 * this.slopeLength / this.totalLength;
+				var sign = this.rate > 0 ? 1 : -1;
+				var normalizer = this.rate == 1 * sign ? 0 : this.rate * 0.12 * sign;
+				this.intervalKeeper = setInterval(this.intervalFunc.bind(this), time / (this.atMax * this.rate * sign));
+			}
+			this.intervalKeeper = undefined;
+			this.intervalFunc = function() {
+				var sign = this.rate >= 0 ? 1 : -1;
+				var max = 12;
+				var min = -5;
+				if (this.rate != 0) {
+					if (this.start + 1 * sign <= max - 1 && this.start + 1 * sign > min) {
+						this.start += 1 * sign;
+						document.querySelector('#slider' + this.number).value = this.start;
+						showValue(this.start, true, this);
+					} else {
+						if (this.start + 1 * sign >= max - 1) {
+							document.querySelector('#slider' + this.number).value = max;
+							showValue(max, true, this);
+						} else if (this.start + 1 * sign <= min) {
+							document.querySelector('#slider' + this.number).value = min;
+							showValue(min, true, this);
+						}
+						clearInterval(this.intervalKeeper)
+					}
+				} else {
+					clearInterval(this.intervalKeeper);
+				}
+			};
+			this.makeData = function(min, max) {
+				this.data = [
+					[this.start, 0]
+				];
+				var i = 1;
+				this.atMax = undefined;
+				while (this.data[i - 1][1] < 9 || this.data.length < 9) {
+					if (this.data[i - 1][0] == max && this.rate > 0) {
+						if (this.atMax == undefined) {
+							this.atMax = i - 1;
+						}
+						this.ymax = 12;
+						this.data.push([max, 9]);
+					} else if (this.data[i - 1][0] == min && this.rate < 0) {
+						if (this.atMax == undefined) {
+							this.atMax = i - 1;
+						}
+						this.ymax = -5;
+						this.data.push([min, 9]);
+					} else if (this.data[i - 1][0] + this.rate < min) {
+						this.ymax = -5;
+						this.atMax = (min - this.start) / this.rate;
+						this.data.push([min, (min - this.start) / this.rate]);
+					} else if (this.data[i - 1][0] + this.rate > max) {
+						this.ymax = 12;
+						this.atMax = (max - this.start) / this.rate;
+						this.data.push([max, (max - this.start) / this.rate]);
+					} else {
+						this.data.push([this.data[i - 1][0] + this.rate, i]);
+					}
+					i++;
+				}
+				if (this.data[i - 1][0] <= max && this.rate > 0 && this.data[i - 2][0] < max) {
+					this.atMax = 9;
+					this.ymax = this.data[i - 1][0];
+				}
+				if (this.data[i - 1][0] >= min && this.rate < 0 && this.data[i - 2][0] > min) {
+					this.atMax = 9;
+					this.ymax = this.data[i - 1][0];
+				}
+				if (this.data.length > 8) {
+					console.log(this.ymax);
+					this.slopeLength = Math.sqrt(Math.pow(y(this.ymax) - y(this.data[0][0]), 2) + Math.pow(x(this.atMax) - x(this.data[0][1]), 2))
+				}
+			};
+			this.addLine = function() {
+				var line = d3.svg.line()
+					.x(function(d, i) {
+						return x(d[1]);
+					})
+					.y(function(d) {
+						return y(d[0]);
+					})
+				var path = graph.append("svg:path")
+					.attr("d", line(this.data))
+					.attr("id", this.id)
+					.attr("stroke", this.color)
+					.attr("stroke-width", "6")
+					.attr("fill", "none");
+				this.totalLength = path.node().getTotalLength();
+				path
+					.attr("stroke-dasharray", this.totalLength + " " + this.totalLength)
+					.attr("stroke-dashoffset", this.totalLength)
+					.transition()
+					.duration(this.time)
+					.ease("linear")
+					.attr("stroke-dashoffset", 0);
+			};
+		}
+		var elevators = [];
+		var colors = ["#3F88C5", "#E88020", "#20c230", "#ddf933", "#b118a2", "#444142"];
+		for (var i = 0; i < numElevators; i++) {
+			elevators.push(new elevator(i + 1, "elevator" + (i + 1), colors[i % colors.length]));
+			elevators[i].addToPage(50 * i);
+		}
+		document.querySelector("#graph").style.left = 20 + 50 * (numElevators - 1);
+		document.querySelector("#graph").style.top = 30 + 20 * numElevators;
+		document.addEventListener("DOMContentLoaded", function() {
+			elevators[0].addLine.call({
+				data: [
+					[0, 0],
+					[0, 9]
+				],
+				id: "origin"
+			});
+
+			elevators[0].addLine.call({
+				data: [
+					[-5, 0],
+					[12, 0]
+				],
+				id: "origin2"
+			});
+
+
+			for (var i = 0; i < numElevators; i++) {
+				setValue(0, true, elevators[i]);
+				document.getElementById("slope" + elevators[i].number).value = elevators[i].rate;
+			}
+
+		});
+
+		var m = [80, 80, 80, 80]; // margins
+		var w = 400 - m[1] - m[3]; // width
+		var h = 600 - m[0] - m[2]; // height
+		var x = d3.scale.linear().domain([0, 9]).range([0, w]);
+		var y = d3.scale.linear().domain([-5, 12]).range([h, 0]);
+		var graph = d3.select("#graph").append("svg:svg")
+			.attr("width", w + m[1] + m[3])
+			.attr("height", h + m[0] + m[2])
+			.append("svg:g")
+			.attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+		var xAxis = d3.svg.axis().scale(x).ticks(10).tickSize(-h - 5);
+		graph.append("svg:g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + (h + 5) + ")")
+			.call(xAxis);
+
+
+		var yAxisLeft = d3.svg.axis().scale(y).ticks(16).tickSize(-w).orient("left");
+		graph.append("svg:g")
+			.attr("class", "y axis")
+			.call(yAxisLeft);
+		graph.append("text")
+			.attr("text-anchor", "middle") // this makes it easy to centre the text as the transform is applied to the anchor
+			.attr("transform", "translate(" + (w / 2) + "," + (h + (m[0] / 2)) + ")") // centre below axis
+			.text("Time in seconds");
+		graph.append("text")
+			.attr("text-anchor", "middle") // this makes it easy to centre the text as the transform is applied to the anchor
+			.attr("transform", "translate(-25," + (h / 2) + ")rotate(-90)") // text is drawn off the screen top left, move down and out and rotate
+			.text("Distance from the ground in floors");
+
+		function go() {
+			for (var i = 0; i < elevators.length; i++) {
+				graph.select('#' + elevators[i].id).remove();
+				elevators[i].getRate();
+				elevators[i].makeData(-5, 12);
+			}
+			for (var i = 0; i < elevators.length; i++) {
+				elevators[i].addLine();
+				elevators[i].setTimer();
+
+			}
+		}
+	</script>
+</body>
+
+</html>
