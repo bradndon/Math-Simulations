@@ -288,7 +288,7 @@ to provide a positioning context for the range input and other elements.*/
 			this.time = 3000;
 			this.slopeLength = 0;
 			this.getRate = function() {
-				this.rate = parseInt(document.getElementById("slope" + this.number).value);
+				this.rate = parseFloat(document.getElementById("slope" + this.number).value);
 			};
 			this.addToPage = function(left) {
 				document.write('Elevator ' + this.number + ' rate:<input name="slope" id="slope' + this.number + '" type="number"></input><br><p style="position:absolute; top:' + (40 + 20 * numElevators) + ';left:' + (left + 19) + '">' + this.number +
