@@ -385,7 +385,7 @@ to provide a positioning context for the range input and other elements.*/
 					.attr("d", line(this.data))
 					.attr("id", this.id)
 					.attr("stroke", this.color)
-					.attr("stroke-width", "6")
+					.attr("stroke-width", this.sw)
 					.attr("fill", "none");
 				this.totalLength = path.node().getTotalLength();
 				path
@@ -411,7 +411,9 @@ to provide a positioning context for the range input and other elements.*/
 					[0, 0],
 					[0, 9]
 				],
-				id: "origin"
+				id: "origin",time:0,
+				color:"black",
+				sw:4
 			});
 
 			elevators[0].addLine.call({
@@ -419,7 +421,11 @@ to provide a positioning context for the range input and other elements.*/
 					[-5, 0],
 					[12, 0]
 				],
-				id: "origin2"
+				id: "origin2",
+				time:0,
+				color:"black",
+				sw:4
+
 			});
 
 
