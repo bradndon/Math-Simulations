@@ -1,28 +1,150 @@
 <html>
 
 <head>
+	<link href='https://fonts.googleapis.com/css?family=Lato:100,400' rel='stylesheet' type='text/css'>
 	<title>Elevator Simulation</title>
 	<script src="http://mbostock.github.com/d3/d3.v2.js"></script>
 	<style>
+		* {
+			margin: 0;
+			padding: 0;
+		}
+
+		html {
+			font-size: 62.5%;
+		}
+
+		body {
+			font-family: 'Lato', sans-serif;
+			background-color: #FFF3E0s;
+		}
+
+		button {
+			padding: 10px 20px;
+			text-transform: uppercase;
+			background-color: #ff1744;
+			color: white;
+			font-size: 1.8rem;
+			border: none;
+			border-radius: 30px;
+			margin: 20px;
+		}
+
+		button:hover {
+			cursor: pointer;
+			-webkit-box-shadow: 1px 1px 5px 0px #ff1744;
+			-moz-box-shadow: 1px 1px 5px 0px #ff1744;
+			box-shadow: 1px 1px 5px 0px #ff1744;
+		}
+
+		input[type=number] {
+			padding: 5px;
+			font-size: 1.6rem;
+			color: #303030;
+			box-shadow: 0px 0px 0px 2px transparent;
+			transition: box-shadow .3s;
+			border: none;
+			width: 100%;
+			height: 2em;
+			position: absolute;
+			z-index: 2;
+			top: 0;
+		}
+
+		input:focus + .input__label::after {
+			-webkit-animation: anim-shadow 0.3s forwards;
+			animation: anim-shadow 0.3s forwards;
+		}
+
+		.input__label {
+			font-size: 1.4rem;
+			font-weight: 100;
+		}
+
+		.input__label::after {
+			content: '';
+			position: absolute;
+			top: 5px;
+			left: 0;
+			width: 100%;
+			height: 2em;
+			box-shadow: 0px 0px 0px 0px #ff5252;
+			color: #ff5252;
+		}
+
+		.input__span {
+			padding-top: 40px;
+			position: relative;
+			width: 100%;
+			display: block;
+			height: 75px;
+			box-sizing: border-box;
+		}
+
+		#inputs {
+			background-color: #EFEBE9;
+			position: fixed;
+			right: 0;
+			height: 100%;
+			width: 30%;
+			padding: 15px;
+			box-sizing: border-box;
+			overflow-y: scroll;
+		}
+
+		@-webkit-keyframes anim-shadow {
+			to {
+				box-shadow: 0px 0px 25px 12px;
+				opacity: 0;
+			}
+		}
+
+		input[type=number]:focus {
+			outline: none;
+			box-shadow: 0px 0px 0px 2px #ff1744;
+		}
+
+		#elevatorContainer {
+			padding-top: 20px;
+		}
 
 		.axis {
 			shape-rendering: crispEdges;
 		}
+
 		.x.axis path {
 			display: none;
 		}
+
 		.x.axis line,
 		.x.axis path {
 			stroke: #888;
 			stroke-dasharray: 0.0 0.0;
 			stroke-dashoffset: 0.00;
 		}
+
 		.y.axis line,
 		.y.axis path {
 			fill: none;
 			stroke: #888;
 			stroke-dasharray: 0.0 0.0;
 			stroke-dashoffset: 0.00;
+		}
+
+		text {
+			font-size: 1.4rem;
+		}
+
+		.y.axis text {
+			transform: translate(-5px, 0px);
+			-ms-transform: translate(-5px, 0px);
+			/* IE 9 */
+			-webkit-transform: translate(-5px, 0px);
+			/* Safari and Chrome */
+			-o-transform: translate(-5px, 0px);
+			/* Opera */
+			-moz-transform: translate(-5px, 0px);
+			/* Firefox */
 		}
 
 		.slider,
@@ -46,20 +168,20 @@ to provide a positioning context for the range input and other elements.*/
 		/* .slidertrack is the visible track on which the user drags the thumb button. */
 
 		.slidertrack {
-			border: 2px outset #666;
+			border: 1px outset #666;
 			border-radius: 4px;
 			position: absolute;
+			width: 5px;
 		}
 		/* .sliderfill adds color (or a gradient as seen here) to the track as the user
     drags the thumb. */
 
 		.sliderfill {
-			border: 2px solid black;
-			border-radius: 4px;
+			border: 0 none;
+			border-radius: 0px;
 			position: absolute;
 			opacity: 0.2;
 			pointer-events: none;
-			background: black;
 		}
 		/* .sliderthumb can be any css you like including an image.
     The dimensions must match those found in the rule for
@@ -77,6 +199,10 @@ to provide a positioning context for the range input and other elements.*/
 			margin: 0px;
 			text-align: center;
 			pointer-events: none;
+			border-radius: 2px;
+			-webkit-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.75);
+			-moz-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.75);
+			box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.75);
 		}
 		/* .slidervalue can be styled as you see fit */
 
@@ -174,10 +300,13 @@ to provide a positioning context for the range input and other elements.*/
 		input[type=range]::-webkit-slider-thumb {
 			width: 40px;
 			height: 60px;
-			border-radius: 0px;
 			border: 0 none;
 			background: transparent;
 			-webkit-appearance: none;
+			border-radius: 2px;
+			-webkit-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.75);
+			-moz-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.75);
+			box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.75);
 		}
 		/* microsoft IE10+ and Edge - eliminates default fills before and after thumb */
 
@@ -204,7 +333,7 @@ to provide a positioning context for the range input and other elements.*/
 		td,
 		tr,
 		th {
-			width: 400px;
+			margin: 0 10px;
 			border: 0 none !important;
 		}
 	</style>
@@ -212,15 +341,21 @@ to provide a positioning context for the range input and other elements.*/
 
 <body>
 
-	<form style="margin:0;padding-left:5;padding-top:5px;position:fixed;bottom:0;left:0;z-index:1000000; width:100%;height:25px;background-color:#0b2778;color:white">
-		Create new amount of elevators:
-		<input type="text" name="num"></input>
+	<form style=" font-size:1.4rem;font-weight:100;margin:0;padding-left:5;padding-top:5px;position:fixed;bottom:0;right:0;z-index:1000000; box-sizing:border-box;width:30%;height:50px;background-color:#d50000;color:white">
+		Create new amount of elevators
+		<br>
+		<input type="text" style="margin-top:5px;" name="num"></input>
 		<input type="submit" value="Create" />
 		<br>
 	</form>
-	<button type="button" onclick="go(this.form)">Go</button>
-	<br>
-	<div id="graph" class="aGraph" style="position:absolute;top:50px;left:80px; float:left;"></div>
+	<div>
+		<div id="inputs"></div>
+
+		<div id="elevatorContainer" style="width:70%;"></div>
+		<div id="graph" class="aGraph" style="float:left;"></div>
+		<div style="clear: both"></div>
+		<button type="button" onclick="go(this.form)">Run simulation</button>
+	</div>
 
 	<script>
 		var numElevators = window.location.search.split("=")[1] == undefined ? 1 : window.location.search.split("=")[1];
@@ -241,8 +376,8 @@ to provide a positioning context for the range input and other elements.*/
 			var bigval = 480; /* widest or tallest value depending on orientation */
 			var smallval = 40; /* narrowest or shortest value depending on orientation */
 			var tracksize = bigval - thumbsize;
-			var fillsize = 16;
-			var filloffset = 10;
+			var fillsize = 0;
+			var filloffset = 20;
 			var bordersize = 2;
 			var loc = vertical ? (1 - pc) * tracksize : pc * tracksize;
 			var degrees = 360 * pc;
@@ -291,11 +426,12 @@ to provide a positioning context for the range input and other elements.*/
 				this.rate = parseFloat(document.getElementById("slope" + this.number).value);
 			};
 			this.addToPage = function(left) {
-				document.write('Elevator ' + this.number + ' rate:<input name="slope" id="slope' + this.number + '" type="number"></input><br><p style="position:absolute; top:' + (40 + 20 * numElevators) + ';left:' + (left + 19) + '">' + this.number +
-					'</p><table style=" position:absolute; top:' + (20 + 20 * numElevators) + ';left:' + left + '; margin-top:60px;  float:left;" class="slider2column"><tr><td><div class="slidershell" id="slidershell' + this.number +
+				document.getElementById("inputs").innerHTML += '<span class="input__span"><input name="slope" id="slope' + this.number + '" type="number"></input><label class="input__label">Elevator ' + this.number + ' rate</label></span>'
+				document.getElementById("elevatorContainer").innerHTML += '<div style="float: left"><table style="margin-top:0px;  float:left;" class="slider2column"><tr><td><div class="slidershell" id="slidershell' + this.number +
 					'"><div class="sliderfill" id="sliderfill' + this.number + '"></div><div class="slidertrack" id="slidertrack' + this.number + '"></div><div class="sliderthumb" id="sliderthumb' + this.number +
 					'"></div><div class="slidervalue" id="slidervalue' + this.number + '">0</div><input class="slidervertical" name="start" id="slider' + this.number + '" type="range" min="-5" max="12" value="0" oninput="showValue(value,true,elevators[' + (this.number -
-						1) + ']);" onchange="showValue(value,true,elevators[' + (this.number - 1) + ']);" orient="vertical" /></div></td></tr></table>');
+						1) + ']);" onchange="showValue(value,true,elevators[' + (this.number - 1) + ']);" orient="vertical" /></div></td></tr></table><p style="font-size:1.4rem;margin-top:5px;margin-left:' + 30 + '">' + this.number +
+					'</p></div>';
 				document.querySelector('#sliderthumb' + this.number).style.backgroundColor = this.color;
 			};
 			this.setTimer = function() {
@@ -398,22 +534,24 @@ to provide a positioning context for the range input and other elements.*/
 			};
 		}
 		var elevators = [];
-		var colors = ["#3F88C5", "#E88020", "#20c230", "#ddf933", "#b118a2", "#444142"];
+		var colors = ["#1E88E5", "#FB8C00", "#43A047", "#FDD835", "#8E24AA", "#757575"];
 		for (var i = 0; i < numElevators; i++) {
 			elevators.push(new elevator(i + 1, "elevator" + (i + 1), colors[i % colors.length]));
 			elevators[i].addToPage(50 * i);
 		}
+		document.getElementById("inputs").innerHTML += "<div style='clear:both'></div>";
 		document.querySelector("#graph").style.left = 20 + 50 * (numElevators - 1);
-		document.querySelector("#graph").style.top = 30 + 20 * numElevators;
+		document.querySelector("#graph").style.top = 30 + 75 * numElevators;
 		document.addEventListener("DOMContentLoaded", function() {
 			elevators[0].addLine.call({
 				data: [
 					[0, 0],
 					[0, 9]
 				],
-				id: "origin",time:0,
-				color:"black",
-				sw:4
+				id: "origin",
+				time: 0,
+				color: "black",
+				sw: 4
 			});
 
 			elevators[0].addLine.call({
@@ -422,9 +560,9 @@ to provide a positioning context for the range input and other elements.*/
 					[12, 0]
 				],
 				id: "origin2",
-				time:0,
-				color:"black",
-				sw:4
+				time: 0,
+				color: "black",
+				sw: 4
 
 			});
 
@@ -436,9 +574,9 @@ to provide a positioning context for the range input and other elements.*/
 
 		});
 
-		var m = [80, 80, 80, 80]; // margins
-		var w = 400 - m[1] - m[3]; // width
-		var h = 600 - m[0] - m[2]; // height
+		var m = [25, 80, 40, 80]; // margins
+		var w = 240; // width
+		var h = 440; // height
 		var x = d3.scale.linear().domain([0, 9]).range([0, w]);
 		var y = d3.scale.linear().domain([-5, 12]).range([h, 0]);
 		var graph = d3.select("#graph").append("svg:svg")
@@ -460,7 +598,7 @@ to provide a positioning context for the range input and other elements.*/
 			.call(yAxisLeft);
 		graph.append("text")
 			.attr("text-anchor", "middle") // this makes it easy to centre the text as the transform is applied to the anchor
-			.attr("transform", "translate(" + (w / 2) + "," + (h + (m[0] / 2)) + ")") // centre below axis
+			.attr("transform", "translate(" + (w / 2) + "," + (h + (m[0] / 2) + 20) + ")") // centre below axis
 			.text("Time in seconds");
 		graph.append("text")
 			.attr("text-anchor", "middle") // this makes it easy to centre the text as the transform is applied to the anchor
